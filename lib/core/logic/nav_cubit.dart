@@ -6,6 +6,8 @@ class NavOnboarding extends NavState {}
 
 class NavHome extends NavState {}
 
+class NavSignIn extends NavState {}
+
 class NavSettings extends NavState {}
 
 class NavProfile extends NavState {}
@@ -14,4 +16,5 @@ class NavCubit extends Cubit<NavState> {
   NavCubit() : super(NavHome());
 
   void showOnboarding() => emit(NavOnboarding());
+  void showSignIn() => emit(NavSignIn());
 }
