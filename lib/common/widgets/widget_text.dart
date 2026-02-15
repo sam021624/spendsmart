@@ -25,7 +25,7 @@ class WidgetText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultColor = Colors.white;
+    final defaultColor = AppColors.black;
 
     return Text(
       text,

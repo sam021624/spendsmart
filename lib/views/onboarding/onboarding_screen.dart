@@ -2,6 +2,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:spendsmart/common/constants/app_colors.dart';
+import 'package:spendsmart/common/constants/app_sizes.dart';
 import 'package:spendsmart/common/constants/icon_routes.dart';
 import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/core/logic/nav_cubit.dart';
@@ -54,16 +56,27 @@ class OnboardingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => OnboardingCubit(),
-      child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [_buildCarouselImage(context), _buildIndicator()],
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            body: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsetsGeometry.symmetric(
+                    horizontal: AppSizes.defaultPaddingw,
+                    vertical: AppSizes.defaultPaddingh,
+                  ),
+                  child: Column(
+                    children: [_buildCarouselImage(context), _buildIndicator()],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-        floatingActionButton: _buildButton(context),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: _buildButton(context),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+          );
+        },
       ),
     );
   }
@@ -93,13 +106,16 @@ class OnboardingScreen extends StatelessWidget {
   }
 
   Widget _buildIndicator() {
-    // 3. BlocBuilder watches the index
     return BlocBuilder<OnboardingCubit, int>(
       builder: (context, activeIndex) {
         return AnimatedSmoothIndicator(
           activeIndex: activeIndex,
           count: 3,
-          effect: const WormEffect(dotHeight: 8, dotWidth: 8),
+          effect: const WormEffect(
+            dotHeight: 8,
+            dotWidth: 8,
+            activeDotColor: AppColors.primary,
+          ),
         );
       },
     );
