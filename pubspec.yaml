@@ -52,9 +52,9 @@ flutter_native_splash:
   ios: true
   web: true
 
-  color: "#193bbd"
+  color: "#ffffff"
   image: "assets/icons/app_logo_nobg.png"
 
   android_12:
-    color: "#193bbd"
+    color: "#ffffff"
     image: "assets/icons/app_logo_nobg.png"
