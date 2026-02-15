@@ -7,7 +7,10 @@ import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_icon.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
+import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/core/helper/validators.dart';
+import 'package:spendsmart/views/auth/forgot_password/forgot_password_screen.dart';
+import 'package:spendsmart/views/auth/sign_up/presentation/sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -26,9 +29,9 @@ class _SignInScreenState extends State<SignInScreen> {
   final bool _isLoading = false;
   bool _rememberMe = false;
 
-  static const String _rememberMeKey = 'rememberMe';
-  static const String _emailKey = 'savedEmail';
-  static const String _passwordKey = 'savedPassword';
+  // static const String _rememberMeKey = 'rememberMe';
+  // static const String _emailKey = 'savedEmail';
+  // static const String _passwordKey = 'savedPassword';
 
   @override
   Widget build(BuildContext context) {
@@ -112,10 +115,14 @@ class _SignInScreenState extends State<SignInScreen> {
                 WidgetText(text: 'Remember me', fontSize: 12.sp),
               ],
             ),
-            WidgetText(
-              text: 'Forgot Password',
-              textColor: AppColors.primary,
-              fontSize: 12.sp,
+            GestureDetector(
+              // onTap: () => context.read<NavCubit>().showForgotPassword(),
+              onTap: () => context.navigateTo(const ForgotPasswordScreen()),
+              child: WidgetText(
+                text: 'Forgot Password',
+                textColor: AppColors.primary,
+                fontSize: 12.sp,
+              ),
             ),
           ],
         ),
@@ -126,7 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget _buildButton(BuildContext context) {
     return Column(
       children: [
-        MyButton(
+        WidgetButton(
           text: _isLoading ? 'Signing In...' : 'Sign in',
           textColor: Colors.white,
           // onPressed: _isLoading ? null : _submitLogin,
@@ -134,41 +141,13 @@ class _SignInScreenState extends State<SignInScreen> {
           color: AppColors.primary,
         ),
         SizedBox(height: 8.h),
-        MyButton(
+        WidgetButton(
           text: 'Create Account',
           textColor: Colors.black,
-          // onPressed: _isLoading
-          //     ? null
-          //     : () => Get.to(() => const RoleSelection()),
-          onPressed: () {},
+          onPressed: () => context.navigateTo(const SignUpScreen()),
           color: Colors.white,
         ),
       ],
-    );
-  }
-}
-
-class MyButton extends StatelessWidget {
-  const MyButton({
-    super.key,
-    required this.text,
-    this.textColor,
-    this.onPressed,
-    this.color,
-  });
-
-  final String text;
-  final Color? textColor;
-  final void Function()? onPressed;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    return WidgetButton(
-      text: text,
-      onPressed: onPressed,
-      color: color,
-      textColor: textColor,
     );
   }
 }

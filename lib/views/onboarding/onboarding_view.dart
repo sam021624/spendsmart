@@ -7,7 +7,8 @@ import 'package:spendsmart/common/constants/app_colors.dart';
 import 'package:spendsmart/common/constants/app_sizes.dart';
 import 'package:spendsmart/common/constants/icon_routes.dart';
 import 'package:spendsmart/common/widgets/widget_button.dart';
-import 'package:spendsmart/core/logic/nav_cubit.dart';
+import 'package:spendsmart/core/helper/navigation_extension.dart';
+import 'package:spendsmart/views/auth/sign_in/presentation/sign_in_screen.dart';
 import 'package:spendsmart/views/onboarding/cubit/onboarding_cubit.dart';
 import 'package:spendsmart/views/onboarding/widgets/carousel_item.dart';
 
@@ -125,7 +126,7 @@ class OnboardingView extends StatelessWidget {
       ),
       child: WidgetButton(
         text: 'Get Started',
-        onPressed: () => context.read<NavCubit>().showSignIn(),
+        onPressed: () => context.navigateTo(const SignInScreen()),
       ),
     );
   }

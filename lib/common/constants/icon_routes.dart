@@ -12,4 +12,5 @@ class IconRoutes {
 
   //  -- Icons  --  //
   static const String loginIcon = '${_iconRoute}login.svg';
+  static const String forgotPasswordIcon = '${_iconRoute}forgot_password.svg';
 }
