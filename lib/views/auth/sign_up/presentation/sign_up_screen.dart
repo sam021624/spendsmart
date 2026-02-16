@@ -7,8 +7,11 @@ import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_icon.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
+import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/core/helper/validators.dart';
+import 'package:spendsmart/core/services/auth_service.dart';
 import 'package:spendsmart/views/auth/sign_up/widgets/terms_and_agreements.dart';
+import 'package:spendsmart/views/home/navigation_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,28 +23,34 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPassController = TextEditingController();
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(forceMaterialTransparency: true),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsetsGeometry.symmetric(
-              horizontal: AppSizes.defaultPaddingh,
-            ),
-            child: Column(
-              spacing: 8.h,
-              children: [
-                _buildImage(),
-                _buildHeader(),
-                _buildForms(),
-                _buildTermsAndAgreement(),
-                _buildButton(context),
-              ],
+      body: Form(
+        key: _formKey,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsetsGeometry.symmetric(
+                horizontal: AppSizes.defaultPaddingh,
+              ),
+              child: Column(
+                spacing: 8.h,
+                children: [
+                  _buildImage(),
+                  _buildHeader(),
+                  _buildForms(),
+                  _buildTermsAndAgreement(),
+                  _buildButton(context),
+                ],
+              ),
             ),
           ),
         ),
@@ -77,9 +86,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       spacing: 8.h,
       children: [
         WidgetTextField(
-          controller: emailController,
+          controller: usernameController,
           hintText: 'Enter username',
-          validator: Validators.validateEmail,
+          validator: Validators.validateUsername,
         ),
         WidgetTextField(
           controller: emailController,
@@ -87,9 +96,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           validator: Validators.validateEmail,
         ),
         WidgetTextField(
-          controller: emailController,
+          controller: phoneNumberController,
           hintText: 'Enter phone number',
           validator: Validators.validateEmail,
+          keyboardType: TextInputType.numberWithOptions(),
         ),
         WidgetTextField(
           controller: passwordController,
@@ -98,7 +108,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           validator: Validators.validatePassword,
         ),
         WidgetTextField(
-          controller: passwordController,
+          controller: confirmPassController,
           hintText: 'Confirm password',
           obscureText: true,
           validator: (value) {
@@ -122,8 +132,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildButton(BuildContext context) {
     return WidgetButton(
       text: 'Create Account',
-      textColor: AppColors.white,
-      onPressed: () {},
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          final user = await AuthService().signUp(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+            username: usernameController.text.trim(),
+            phoneNumber: phoneNumberController.text.trim(),
+          );
+
+          if (user != null) {
+            context.pushAndClear(NavigationScreen());
+          } else {
+            // 3. Show error (e.g., email already in use)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Registration Failed. Please try again.")),
+            );
+          }
+        }
+      },
       color: AppColors.primary,
     );
   }

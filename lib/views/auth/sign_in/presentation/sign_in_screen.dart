@@ -9,6 +9,7 @@ import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/core/helper/validators.dart';
+import 'package:spendsmart/core/services/auth_service.dart';
 import 'package:spendsmart/views/auth/forgot_password/forgot_password_screen.dart';
 import 'package:spendsmart/views/auth/sign_up/presentation/sign_up_screen.dart';
 import 'package:spendsmart/views/home/navigation_screen.dart';
@@ -36,7 +37,18 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> submitLogin(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
-      context.pushReplace(const NavigationScreen());
+      final user = await AuthService().login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (user != null) {
+        context.pushAndClear(const NavigationScreen());
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Registration Failed. Please try again.")),
+        );
+      }
     }
   }
 

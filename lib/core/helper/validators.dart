@@ -1,4 +1,26 @@
 class Validators {
+  static String? validateUsername(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a username.';
+    }
+    if (value.length < 3) {
+      return 'Username must be at least 3 characters.';
+    }
+    if (value.length > 20) {
+      return 'Username must not exceed 20 characters.';
+    }
+
+    // Alphanumeric and underscores only, no spaces
+    const pattern = r'^[a-zA-Z0-9_]+$';
+    final regExp = RegExp(pattern);
+
+    if (!regExp.hasMatch(value)) {
+      return 'Only letters, numbers, and underscores are allowed.';
+    }
+
+    return null;
+  }
+
   static String? validateEmptyField(String? value) {
     if (value == null || value.isEmpty) {
       return 'This field is required.';

@@ -51,14 +51,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Ionicons.cart_outline),
-            selectedIcon: Icon(Ionicons.cart),
-            label: 'Reports',
+            icon: Icon(Ionicons.cash_outline),
+            selectedIcon: Icon(Ionicons.cash),
+            label: 'Balance',
           ),
           NavigationDestination(
-            icon: Icon(Ionicons.wallet_outline),
-            selectedIcon: Icon(Ionicons.wallet),
-            label: 'Settings',
+            icon: Icon(Ionicons.analytics_outline),
+            selectedIcon: Icon(Ionicons.analytics),
+            label: 'Reports',
           ),
           NavigationDestination(
             icon: Icon(Ionicons.person_outline),
