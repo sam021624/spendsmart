@@ -11,6 +11,7 @@ import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/core/helper/validators.dart';
 import 'package:spendsmart/views/auth/forgot_password/forgot_password_screen.dart';
 import 'package:spendsmart/views/auth/sign_up/presentation/sign_up_screen.dart';
+import 'package:spendsmart/views/home/navigation_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -32,6 +33,12 @@ class _SignInScreenState extends State<SignInScreen> {
   // static const String _rememberMeKey = 'rememberMe';
   // static const String _emailKey = 'savedEmail';
   // static const String _passwordKey = 'savedPassword';
+
+  Future<void> submitLogin(BuildContext context) async {
+    if (_formKey.currentState?.validate() ?? false) {
+      context.pushReplace(const NavigationScreen());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,8 +143,7 @@ class _SignInScreenState extends State<SignInScreen> {
         WidgetButton(
           text: _isLoading ? 'Signing In...' : 'Sign in',
           textColor: Colors.white,
-          // onPressed: _isLoading ? null : _submitLogin,
-          onPressed: () {},
+          onPressed: _isLoading ? null : () => submitLogin(context),
           color: AppColors.primary,
         ),
         SizedBox(height: 8.h),
