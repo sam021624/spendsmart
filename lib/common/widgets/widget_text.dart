@@ -13,12 +13,14 @@ class WidgetText extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.textUnderline,
+    this.fontStyle,
   });
   final String text;
   final Color? textColor;
   final double? fontSize;
   final FontWeight? fontWeight;
   final TextOverflow? overflow;
+  final FontStyle? fontStyle;
   final TextAlign? textAlign;
   final int? maxLines;
   final bool? textUnderline;
@@ -36,7 +38,7 @@ class WidgetText extends StatelessWidget {
         color: textColor ?? defaultColor,
         fontWeight: fontWeight ?? FontWeight.normal,
         overflow: overflow ?? TextOverflow.visible,
-
+        fontStyle: fontStyle ?? FontStyle.normal,
         decoration: (textUnderline == true)
             ? TextDecoration.underline
             : TextDecoration.none,

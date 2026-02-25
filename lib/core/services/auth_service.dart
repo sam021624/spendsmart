@@ -12,7 +12,6 @@ class AuthService {
     required String phoneNumber,
   }) async {
     try {
-      // 1. Create User in Firebase Auth
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -21,15 +20,13 @@ class AuthService {
       User? user = result.user;
 
       if (user != null) {
-        // 2. Save additional info to Firestore using the Auth UID
         await _firestore.collection('users').doc(user.uid).set({
-          'uid': user.uid,
           'username': username,
           'email': email,
           'phoneNumber': phoneNumber,
           'createdAt': FieldValue.serverTimestamp(),
-          'monthlyIncome': 0, // Placeholder for onboarding
-          'savingsGoal': 0, // Placeholder for onboarding
+          'monthlyIncome': 0,
+          'savingsGoal': 0,
         });
       }
       return user;
@@ -52,7 +49,6 @@ class AuthService {
     }
   }
 
-  // 3. Logout
   Future<void> signOut() async {
     await _auth.signOut();
   }

@@ -20,6 +20,10 @@ dependencies:
   flutter_svg: ^2.2.3
   ionicons: ^0.2.2
   smooth_page_indicator: ^2.0.1
+  firebase_core: ^4.4.0
+  firebase_auth: ^6.1.4
+  cloud_firestore: ^6.1.2
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
