@@ -119,22 +119,19 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
           return SingleChildScrollView(
             padding: EdgeInsets.all(16.w),
             child: Column(
+              spacing: 8.h,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTotalBalanceCard(totalBalance),
-                SizedBox(height: 24.h),
+                SizedBox(height: 8.h),
                 WidgetText(
                   text: "Spending Envelopes",
-                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
-                SizedBox(height: 12.h),
 
-                // List of Envelopes
                 ...envelopes.map((env) => _buildEnvelopeItem(env)),
 
                 _buildAddEnvelopeCTA(),
-                SizedBox(height: 24.h),
                 _buildAITip(),
               ],
             ),
@@ -179,7 +176,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         ? (envelope.remainingAmount / envelope.budgetAmount)
         : 0;
     return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -189,15 +185,12 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         ],
       ),
       child: Column(
+        spacing: 8.h,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              WidgetText(
-                text: envelope.name,
-                fontWeight: FontWeight.bold,
-                fontSize: 15.sp,
-              ),
+              WidgetText(text: envelope.name, fontWeight: FontWeight.bold),
               WidgetText(
                 text:
                     "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
@@ -206,7 +199,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
               ),
             ],
           ),
-          SizedBox(height: 12.h),
           ClipRRect(
             borderRadius: BorderRadius.circular(10.r),
             child: LinearProgressIndicator(
@@ -233,7 +225,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

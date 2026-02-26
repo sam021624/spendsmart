@@ -9,7 +9,6 @@ import 'package:spendsmart/views/onboarding/onboarding_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialize Firebase with the default options for your platform
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(ProviderScope(child: const SpendSmart()));
