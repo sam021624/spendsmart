@@ -1,10 +1,63 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ionicons/ionicons.dart';
+import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
+import 'package:spendsmart/common/widgets/widget_text_field.dart';
 
-class EnvelopeScreen extends StatelessWidget {
+class EnvelopeScreen extends StatefulWidget {
   const EnvelopeScreen({super.key});
+
+  @override
+  State<EnvelopeScreen> createState() => _EnvelopeScreenState();
+}
+
+class _EnvelopeScreenState extends State<EnvelopeScreen> {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
+
+  void _showCreateEnvelopeModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 24.w,
+          right: 24.w,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8.h,
+          children: [
+            WidgetText(
+              text: "Create Envelope",
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            WidgetTextField(
+              controller: nameController,
+              iconData: Ionicons.pricetag_outline,
+              hintText: 'Envelope Name',
+            ),
+            WidgetTextField(
+              controller: amountController,
+              hintText: 'Budget Amount',
+              keyboardType: TextInputType.number,
+              iconData: Ionicons.cash_outline,
+            ),
+            WidgetButton(text: 'Save Envelope', onPressed: () {}),
+            SizedBox(height: 16.h),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +89,7 @@ class EnvelopeScreen extends StatelessWidget {
             _buildEnvelopeItem("Bills", 500, 500, Colors.blue),
             _buildEnvelopeItem("Food", 120, 300, Colors.orange),
             _buildEnvelopeItem("Accessories", 50, 200, Colors.purple),
+            _buildAddEnvelopeCTA(),
 
             const SizedBox(height: 24),
 
@@ -143,6 +197,40 @@ class EnvelopeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAddEnvelopeCTA() {
+    return DottedBorder(
+      options: RoundedRectDottedBorderOptions(
+        radius: Radius.circular(16.sp),
+        color: Colors.grey.withAlpha(150),
+        strokeWidth: 2,
+        dashPattern: const [6, 4],
+      ),
+
+      child: InkWell(
+        onTap: () => _showCreateEnvelopeModal(context),
+        borderRadius: BorderRadius.circular(16.r),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Ionicons.add, color: Colors.grey, size: 20.sp),
+              SizedBox(width: 8.w),
+              WidgetText(
+                text: "Add New Envelope",
+                textColor: Colors.grey,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
