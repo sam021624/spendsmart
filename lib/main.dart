@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:spendsmart/app/themes/app_theme.dart';
 import 'package:spendsmart/firebase_options.dart';
@@ -11,7 +12,7 @@ Future<void> main() async {
   // 2. Initialize Firebase with the default options for your platform
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(const SpendSmart());
+  runApp(ProviderScope(child: const SpendSmart()));
 }
 
 class SpendSmart extends StatelessWidget {

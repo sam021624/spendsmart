@@ -1,23 +1,34 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
+import 'package:spendsmart/models/envelope_model.dart';
 
-class EnvelopeScreen extends StatefulWidget {
+import '../../../providers/envelop_provider.dart';
+
+class EnvelopeScreen extends ConsumerStatefulWidget {
   const EnvelopeScreen({super.key});
 
   @override
-  State<EnvelopeScreen> createState() => _EnvelopeScreenState();
+  ConsumerState<EnvelopeScreen> createState() => _EnvelopeScreenState();
 }
 
-class _EnvelopeScreenState extends State<EnvelopeScreen> {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController amountController = TextEditingController();
+class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController amountController = TextEditingController();
 
-  void _showCreateEnvelopeModal(BuildContext context) {
+  @override
+  void dispose() {
+    nameController.dispose();
+    amountController.dispose();
+    super.dispose();
+  }
+
+  void _showCreateEnvelopeModal() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -29,30 +40,49 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: 24.w,
           right: 24.w,
+          top: 20.h,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8.h,
           children: [
             WidgetText(
               text: "Create Envelope",
-              fontSize: 16.sp,
+              fontSize: 18.sp,
               fontWeight: FontWeight.bold,
             ),
+            SizedBox(height: 16.h),
             WidgetTextField(
               controller: nameController,
               iconData: Ionicons.pricetag_outline,
-              hintText: 'Envelope Name',
+              hintText: 'Envelope Name (e.g. Food)',
             ),
+            SizedBox(height: 10.h),
             WidgetTextField(
               controller: amountController,
-              hintText: 'Budget Amount',
+              hintText: 'Monthly Budget Amount',
               keyboardType: TextInputType.number,
               iconData: Ionicons.cash_outline,
             ),
-            WidgetButton(text: 'Save Envelope', onPressed: () {}),
-            SizedBox(height: 16.h),
+            SizedBox(height: 20.h),
+            WidgetButton(
+              text: 'Save Envelope',
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final amount = double.tryParse(amountController.text) ?? 0.0;
+
+                if (name.isNotEmpty && amount > 0) {
+                  final service = ref.read(envelopeServiceProvider);
+                  if (service != null) {
+                    await service.addEnvelope(name, amount);
+                    nameController.clear();
+                    amountController.clear();
+                    if (mounted) Navigator.pop(context);
+                  }
+                }
+              },
+            ),
+            SizedBox(height: 30.h),
           ],
         ),
       ),
@@ -61,9 +91,14 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final envelopesAsync = ref.watch(envelopesStreamProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const WidgetText(text: "My Envelopes"),
+        title: const WidgetText(
+          text: "My Envelopes",
+          fontWeight: FontWeight.bold,
+        ),
         actions: [
           IconButton(
             onPressed: () {},
@@ -71,76 +106,64 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Total Overview Card
-            _buildTotalBalanceCard(),
+      body: envelopesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) =>
+            Center(child: Text("Error loading envelopes: $err")),
+        data: (envelopes) {
+          double totalBalance = envelopes.fold(
+            0,
+            (sum, env) => sum + env.remainingAmount,
+          );
 
-            const SizedBox(height: 24),
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTotalBalanceCard(totalBalance),
+                SizedBox(height: 24.h),
+                WidgetText(
+                  text: "Spending Envelopes",
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+                SizedBox(height: 12.h),
 
-            // 2. Section Header
-            const WidgetText(text: "Spending Envelopes"),
-            const SizedBox(height: 12),
+                // List of Envelopes
+                ...envelopes.map((env) => _buildEnvelopeItem(env)),
 
-            // 3. The Envelope List
-            _buildEnvelopeItem("Bills", 500, 500, Colors.blue),
-            _buildEnvelopeItem("Food", 120, 300, Colors.orange),
-            _buildEnvelopeItem("Accessories", 50, 200, Colors.purple),
-            _buildAddEnvelopeCTA(),
-
-            const SizedBox(height: 24),
-
-            // 4. AI Insight Tip (Small teaser for your Insights tab)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: WidgetText(
-                      text:
-                          "AI Tip: You're spending on Food faster than usual this week!",
-                      textColor: Colors.blue,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                ],
-              ),
+                _buildAddEnvelopeCTA(),
+                SizedBox(height: 24.h),
+                _buildAITip(),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTotalBalanceCard() {
+  Widget _buildTotalBalanceCard(double balance) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.black, // Dark theme for the main card looks premium
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WidgetText(text: "Total Available", textColor: Colors.white),
-          SizedBox(height: 8),
+          const WidgetText(text: "Total Available", textColor: Colors.white70),
+          SizedBox(height: 8.h),
           WidgetText(
-            text: "₱ 1,000.00",
+            text: "₱ ${balance.toStringAsFixed(2)}",
             textColor: Colors.white,
-            fontSize: 24.sp,
+            fontSize: 26.sp,
             fontWeight: FontWeight.bold,
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 12.h),
           WidgetText(
             text: "₱ 0.00 Unallocated",
             fontSize: 12.sp,
@@ -151,19 +174,16 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
     );
   }
 
-  Widget _buildEnvelopeItem(
-    String title,
-    double remaining,
-    double total,
-    Color color,
-  ) {
-    double progress = remaining / total;
+  Widget _buildEnvelopeItem(EnvelopeModel envelope) {
+    double progress = envelope.budgetAmount > 0
+        ? (envelope.remainingAmount / envelope.budgetAmount)
+        : 0;
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
@@ -174,26 +194,26 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               WidgetText(
-                text: title,
+                text: envelope.name,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 15.sp,
               ),
               WidgetText(
-                text: "₱$remaining / ₱$total",
+                text:
+                    "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
                 textColor: Colors.grey,
                 fontSize: 12.sp,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Progress Bar
+          SizedBox(height: 12.h),
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 8,
-              backgroundColor: color.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 8.h,
+              backgroundColor: Colors.blue.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
             ),
           ),
         ],
@@ -204,33 +224,51 @@ class _EnvelopeScreenState extends State<EnvelopeScreen> {
   Widget _buildAddEnvelopeCTA() {
     return DottedBorder(
       options: RoundedRectDottedBorderOptions(
-        radius: Radius.circular(16.sp),
-        color: Colors.grey.withAlpha(150),
-        strokeWidth: 2,
+        radius: Radius.circular(16.r),
         dashPattern: const [6, 4],
       ),
 
       child: InkWell(
-        onTap: () => _showCreateEnvelopeModal(context),
+        onTap: _showCreateEnvelopeModal,
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.r)),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Ionicons.add, color: Colors.grey, size: 20.sp),
+              const Icon(Ionicons.add, color: Colors.grey),
               SizedBox(width: 8.w),
               WidgetText(
                 text: "Add New Envelope",
                 textColor: Colors.grey,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
+                fontSize: 14.sp,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAITip() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome, color: Colors.blue),
+          SizedBox(width: 12.w),
+          const Expanded(
+            child: WidgetText(
+              text: "AI: Looking good! You haven't overspent today.",
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
