@@ -176,7 +176,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         ? (envelope.remainingAmount / envelope.budgetAmount)
         : 0;
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),

@@ -1,62 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:ionicons/ionicons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:spendsmart/common/constants/app_colors.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
+import 'package:spendsmart/models/goal_model.dart';
+import 'package:spendsmart/services/goal_service.dart';
+import 'package:spendsmart/views/goal/widgets/goal_modals.dart';
 
-class GoalsScreen extends StatelessWidget {
+class GoalsScreen extends ConsumerWidget {
   const GoalsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goalsAsync = ref.watch(goalsStreamProvider);
+
     return Scaffold(
-      appBar: AppBar(title: const WidgetText(text: "Savings Goals")),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          // 1. Total Saved Summary
-          _buildGoalSummaryCard(),
+      appBar: AppBar(
+        title: const WidgetText(
+          text: "Savings Goals",
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      body: goalsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text("Error: $err")),
+        data: (goals) {
+          double totalSaved = goals.fold(0, (sum, g) => sum + g.currentAmount);
 
-          const SizedBox(height: 24),
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              _buildGoalSummaryCard(totalSaved),
+              const SizedBox(height: 8),
 
-          // 2. Active Goals List
-          _buildGoalCard(
-            context,
-            title: "Travel to Cebu",
-            current: 1500,
-            target: 5000,
-            icon: Ionicons.airplane,
-            color: Colors.teal,
-            deadline: "Dec 2026",
-          ),
+              ...goals.map((goal) => _buildGoalCard(context, goal)),
 
-          _buildGoalCard(
-            context,
-            title: "New Laptop",
-            current: 800,
-            target: 45000,
-            icon: Ionicons.laptop,
-            color: Colors.indigo,
-            deadline: "Ongoing",
-          ),
-
-          // 3. Add New Goal Placeholder
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add),
-            label: const Text("Create a New Goal"),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
+              const SizedBox(height: 8),
+              _buildCreateGoalButton(context, ref),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildGoalSummaryCard() {
+  Widget _buildGoalSummaryCard(double total) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -67,33 +55,26 @@ class GoalsScreen extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Text("Total Savings", style: TextStyle(color: Colors.white70)),
-          Text(
-            "₱ 2,300.00",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
+          const WidgetText(text: "Total Savings", textColor: AppColors.white),
+          WidgetText(
+            text: "₱ ${total.toStringAsFixed(2)}",
+            textColor: Colors.white,
+            fontSize: 24.sp,
+            fontWeight: FontWeight.bold,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGoalCard(
-    BuildContext context, {
-    required String title,
-    required double current,
-    required double target,
-    required IconData icon,
-    required Color color,
-    required String deadline,
-  }) {
-    double progress = current / target;
+  Widget _buildGoalCard(BuildContext context, GoalModel goal) {
+    double progress = goal.targetAmount > 0
+        ? goal.currentAmount / goal.targetAmount
+        : 0;
     int percentage = (progress * 100).toInt();
+    Color goalColor = Color(goal.colorValue);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -110,10 +91,17 @@ class GoalsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: goalColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color),
+                child: Icon(
+                  IconData(
+                    goal.iconCode,
+                    fontFamily: 'Ionicons',
+                    fontPackage: 'ionicons',
+                  ),
+                  color: goalColor,
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -121,12 +109,12 @@ class GoalsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     WidgetText(
-                      text: title,
+                      text: goal.title,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                     WidgetText(
-                      text: "Target: $deadline",
+                      text: "Target: ${goal.deadline}",
                       textColor: Colors.grey,
                       fontSize: 12,
                     ),
@@ -135,7 +123,7 @@ class GoalsScreen extends StatelessWidget {
               ),
               WidgetText(
                 text: "$percentage%",
-                textColor: color,
+                textColor: goalColor,
                 fontWeight: FontWeight.bold,
               ),
             ],
@@ -144,7 +132,7 @@ class GoalsScreen extends StatelessWidget {
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
+            valueColor: AlwaysStoppedAnimation<Color>(goalColor),
             minHeight: 10,
             borderRadius: BorderRadius.circular(5),
           ),
@@ -153,13 +141,28 @@ class GoalsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "₱$current",
+                "₱${goal.currentAmount.toInt()}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text("₱$target", style: const TextStyle(color: Colors.grey)),
+              Text(
+                "₱${goal.targetAmount.toInt()}",
+                style: const TextStyle(color: Colors.grey),
+              ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCreateGoalButton(BuildContext context, WidgetRef ref) {
+    return OutlinedButton.icon(
+      onPressed: () => GoalModals.showCreateGoalModal(context, ref),
+      icon: const Icon(Icons.add),
+      label: const Text("Create a New Goal"),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
