@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spendsmart/models/transaction_model.dart';
@@ -6,8 +7,7 @@ import 'package:spendsmart/providers/envelop_provider.dart';
 import '../../models/envelope_model.dart';
 
 class AIService {
-  final String _apiKey =
-      "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";
+  final String _apiKey = dotenv.env['OPENROUTER_API_KEY'] ?? "";
   final String _url = "https://openrouter.ai/api/v1/chat/completions";
 
   Future<String> getBudgetTip({
@@ -16,7 +16,6 @@ class AIService {
   }) async {
     if (envelopes.isEmpty) return "Create an envelope to get started!";
 
-    // 1. Format Envelopes
     final envelopeStatus = envelopes
         .map(
           (e) => "${e.name}: ₱${e.remainingAmount} left of ₱${e.budgetAmount}",
