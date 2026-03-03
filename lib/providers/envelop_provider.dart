@@ -21,7 +21,6 @@ final envelopesStreamProvider = StreamProvider<List<EnvelopeModel>>((ref) {
   return service.getEnvelopes();
 });
 
-// In your providers file
 final transactionsStreamProvider =
     StreamProvider.family<List<TransactionModel>, String>((ref, envelopeId) {
       final service = ref.watch(envelopeServiceProvider);
@@ -31,7 +30,7 @@ final transactionsStreamProvider =
           .collection('users')
           .doc(service.uid)
           .collection('transactions')
-          .where('envelopeId', isEqualTo: envelopeId) // Filter by this envelope
+          .where('envelopeId', isEqualTo: envelopeId)
           .orderBy('timestamp', descending: true)
           .snapshots()
           .map(
@@ -40,3 +39,23 @@ final transactionsStreamProvider =
                 .toList(),
           );
     });
+
+final allTransactionsStreamProvider = StreamProvider<List<TransactionModel>>((
+  ref,
+) {
+  final service = ref.watch(envelopeServiceProvider);
+  if (service == null) return Stream.value([]);
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(service.uid)
+      .collection('transactions')
+      .orderBy('timestamp', descending: true)
+      .limit(20)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map((doc) => TransactionModel.fromMap(doc.data()))
+            .toList(),
+      );
+});

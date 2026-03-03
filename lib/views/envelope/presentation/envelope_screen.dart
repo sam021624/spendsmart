@@ -7,6 +7,7 @@ import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/models/envelope_model.dart';
+import 'package:spendsmart/services/ai_service.dart';
 import 'package:spendsmart/views/envelope/presentation/envelope_detail_screen.dart';
 
 import '../../../providers/envelop_provider.dart';
@@ -131,7 +132,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                 ...envelopes.map((env) => _buildEnvelopeItem(env)),
 
                 _buildAddEnvelopeCTA(),
-                _buildAITip(),
+                _buildAITip(ref),
               ],
             ),
           );
@@ -176,7 +177,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         : 0;
 
     return Material(
-      // Added Material to ensure the ripple effect shows
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -258,7 +258,9 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
     );
   }
 
-  Widget _buildAITip() {
+  Widget _buildAITip(WidgetRef ref) {
+    final aiTipAsync = ref.watch(aiTipProvider);
+
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -269,12 +271,22 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         children: [
           const Icon(Icons.auto_awesome, color: Colors.blue),
           SizedBox(width: 12.w),
-          const Expanded(
-            child: WidgetText(
-              text: "AI: Looking good! You haven't overspent today.",
-              fontSize: 12,
+          Expanded(
+            child: aiTipAsync.when(
+              data: (tip) => WidgetText(text: "AI: $tip", fontSize: 12.sp),
+              loading: () =>
+                  const WidgetText(text: "AI is thinking...", fontSize: 12),
+              error: (err, _) => const WidgetText(
+                text: "AI: Save some ₱ today!",
+                fontSize: 12,
+              ),
             ),
           ),
+          // // Optional: Add a refresh button
+          // IconButton(
+          //   icon: Icon(Icons.refresh, size: 16.sp, color: Colors.blue),
+          //   onPressed: () => ref.refresh(aiTipProvider),
+          // ),
         ],
       ),
     );
