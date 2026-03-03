@@ -50,6 +50,58 @@ class EnvelopeService {
 
     await docRef.set(newEnvelope.toMap());
   }
+
+  Future<void> addTransaction({
+    required String envelopeId,
+    required double amount,
+    required String productName,
+  }) async {
+    final envelopeDoc = _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('envelopes')
+        .doc(envelopeId);
+
+    final transactionDoc = _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('transactions')
+        .doc();
+
+    return _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(envelopeDoc);
+
+      if (!snapshot.exists) {
+        throw Exception("Envelope does not exist!");
+      }
+
+      double currentRemaining = (snapshot.data()?['remainingAmount'] ?? 0.0)
+          .toDouble();
+      double newRemaining = currentRemaining - amount;
+
+      transaction.update(envelopeDoc, {'remainingAmount': newRemaining});
+
+      transaction.set(transactionDoc, {
+        'id': transactionDoc.id,
+        'envelopeId': envelopeId,
+        'envelopeName': snapshot.data()?['name'],
+        'amount': amount,
+        'productName': productName,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  // Stream of Transactions for the current user
+  Stream<List<Map<String, dynamic>>> getTransactions() {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('transactions')
+        .orderBy('timestamp', descending: true) // Newest first
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
 }
 
 final envelopeServiceProvider = Provider<EnvelopeService?>((ref) {

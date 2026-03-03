@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:spendsmart/common/constants/app_colors.dart';
+import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
+import 'package:spendsmart/common/widgets/widget_text_field.dart';
+import 'package:spendsmart/providers/envelop_provider.dart';
 import 'package:spendsmart/views/envelope/presentation/envelope_screen.dart';
 import 'package:spendsmart/views/goal/presentation/goal_screen.dart';
 import 'package:spendsmart/views/insights/presentation/insights_screen.dart';
@@ -35,7 +39,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showTransactionModal(context);
@@ -48,6 +51,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       bottomNavigationBar: BottomAppBar(
+        color: AppColors.lightGrey,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         child: SizedBox(
@@ -110,13 +114,87 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   void _showTransactionModal(BuildContext context) {
+    final TextEditingController amountController = TextEditingController();
+    final TextEditingController productNameController = TextEditingController();
+    String? selectedEnvelopeId;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        height: MediaQuery.of(context).size.height * 0.5,
-        child: const Center(child: Text("Type Expense")),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final envelopesAsync = ref.watch(envelopesStreamProvider);
+
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 8.h,
+              children: [
+                WidgetText(
+                  text: "Log Expense",
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+                WidgetTextField(
+                  controller: amountController,
+                  hintText: "0.00",
+                  keyboardType: TextInputType.number,
+                  iconData: Ionicons.cash_outline,
+                ),
+
+                envelopesAsync.when(
+                  data: (envelopes) => DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Ionicons.wallet_outline),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      hintText: "Select Envelope",
+                    ),
+                    items: envelopes
+                        .map(
+                          (env) => DropdownMenuItem(
+                            value: env.id,
+                            child: Text(env.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) => selectedEnvelopeId = val,
+                  ),
+                  loading: () => const CircularProgressIndicator(),
+                  error: (e, _) => const Text("Error loading envelopes"),
+                ),
+                WidgetTextField(
+                  controller: productNameController,
+                  hintText: "What did you buy? (e.g. Starbucks)",
+                  iconData: Ionicons.create_outline,
+                ),
+                WidgetButton(
+                  text: "Deduct from Envelope",
+                  onPressed: () async {
+                    final amount = double.tryParse(amountController.text) ?? 0;
+                    if (selectedEnvelopeId != null && amount > 0) {
+                      await ref
+                          .read(envelopeServiceProvider)!
+                          .addTransaction(
+                            envelopeId: selectedEnvelopeId!,
+                            amount: amount,
+                            productName: productNameController.text,
+                          );
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                ),
+                SizedBox(height: 16.h),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

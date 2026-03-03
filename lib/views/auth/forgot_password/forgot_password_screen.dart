@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:spendsmart/common/constants/app_colors.dart';
 import 'package:spendsmart/common/constants/app_sizes.dart';
@@ -8,19 +9,60 @@ import 'package:spendsmart/common/widgets/widget_icon.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/core/helper/validators.dart';
+import 'package:spendsmart/core/services/auth_provider.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
 
-  final bool _isLoading = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handlePasswordReset() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await ref
+          .read(authServiceProvider)
+          .sendPasswordReset(emailController.text.trim());
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reset link sent! Please check your email inbox.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +103,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           fontSize: 16.sp,
           fontWeight: FontWeight.bold,
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 8.h),
         WidgetText(
           text:
               "We all have times like this! Let's get you back into your account",
@@ -78,19 +120,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       controller: emailController,
       hintText: 'Enter email',
       validator: Validators.validateEmail,
+      keyboardType: TextInputType.emailAddress,
     );
   }
 
   Widget _buildButton(BuildContext context) {
     return Padding(
-      padding: EdgeInsetsGeometry.symmetric(
-        horizontal: AppSizes.defaultPaddingh,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: AppSizes.defaultPaddingh),
       child: WidgetButton(
         text: _isLoading ? 'Submitting...' : 'Submit',
         textColor: Colors.white,
-        onPressed: () {},
-        color: AppColors.primary,
+        onPressed: _isLoading ? () {} : _handlePasswordReset,
+        color: _isLoading ? Colors.grey : AppColors.primary,
       ),
     );
   }

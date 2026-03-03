@@ -7,6 +7,7 @@ import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/models/envelope_model.dart';
+import 'package:spendsmart/views/envelope/presentation/envelope_detail_screen.dart';
 
 import '../../../providers/envelop_provider.dart';
 
@@ -36,35 +37,28 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24.w,
-          right: 24.w,
-          top: 20.h,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8.h,
           children: [
             WidgetText(
               text: "Create Envelope",
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 16.h),
             WidgetTextField(
               controller: nameController,
               iconData: Ionicons.pricetag_outline,
               hintText: 'Envelope Name (e.g. Food)',
             ),
-            SizedBox(height: 10.h),
             WidgetTextField(
               controller: amountController,
               hintText: 'Monthly Budget Amount',
               keyboardType: TextInputType.number,
               iconData: Ionicons.cash_outline,
             ),
-            SizedBox(height: 20.h),
             WidgetButton(
               text: 'Save Envelope',
               onPressed: () async {
@@ -82,7 +76,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                 }
               },
             ),
-            SizedBox(height: 30.h),
+            SizedBox(height: 24.h),
           ],
         ),
       ),
@@ -175,40 +169,56 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
     double progress = envelope.budgetAmount > 0
         ? (envelope.remainingAmount / envelope.budgetAmount)
         : 0;
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
+
+    return Material(
+      // Added Material to ensure the ripple effect shows
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EnvelopeDetailScreen(envelope: envelope),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
-      child: Column(
-        spacing: 8.h,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+            ],
+          ),
+          child: Column(
+            spacing: 8.h,
             children: [
-              WidgetText(text: envelope.name, fontWeight: FontWeight.bold),
-              WidgetText(
-                text:
-                    "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
-                textColor: Colors.grey,
-                fontSize: 12.sp,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  WidgetText(text: envelope.name, fontWeight: FontWeight.bold),
+                  WidgetText(
+                    text:
+                        "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
+                    textColor: Colors.grey,
+                    fontSize: 12.sp,
+                  ),
+                ],
+              ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10.r),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8.h,
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
               ),
             ],
           ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8.h,
-              backgroundColor: Colors.blue.withOpacity(0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
