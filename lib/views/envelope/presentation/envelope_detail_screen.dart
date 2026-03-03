@@ -65,7 +65,7 @@ class EnvelopeDetailScreen extends ConsumerWidget {
                             size: 50.sp,
                             color: Colors.grey,
                           ),
-                          SizedBox(height: 10.h),
+                          SizedBox(height: 8.h),
                           const WidgetText(
                             text: "No transactions yet",
                             textColor: Colors.grey,
