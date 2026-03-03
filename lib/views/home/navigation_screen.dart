@@ -129,7 +129,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
           final envelopesAsync = ref.watch(envelopesStreamProvider);
 
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            padding: EdgeInsets.only(
+              left: 20.w,
+              right: 20.w,
+              top: 20.h,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
