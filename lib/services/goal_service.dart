@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spendsmart/core/services/auth_provider.dart';
+import 'package:spendsmart/providers/auth_provider.dart';
 import '../models/goal_model.dart';
 
 class GoalService {

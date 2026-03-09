@@ -8,7 +8,7 @@ import 'package:spendsmart/app/themes/app_theme.dart';
 import 'package:spendsmart/firebase_options.dart';
 import 'package:spendsmart/views/onboarding/onboarding_screen.dart';
 import 'package:spendsmart/views/home/navigation_screen.dart';
-import 'package:spendsmart/core/services/auth_service.dart';
+import 'package:spendsmart/services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

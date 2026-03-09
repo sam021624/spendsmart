@@ -9,7 +9,7 @@ import 'package:spendsmart/common/widgets/widget_icon.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/core/helper/validators.dart';
-import 'package:spendsmart/core/services/auth_provider.dart';
+import 'package:spendsmart/providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});

@@ -9,6 +9,7 @@ import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/models/envelope_model.dart';
 import 'package:spendsmart/services/ai_service.dart';
+import 'package:spendsmart/services/auth_service.dart';
 import 'package:spendsmart/views/bills/presentation/bills_screen.dart';
 import 'package:spendsmart/views/envelope/presentation/envelope_detail_screen.dart';
 
@@ -120,6 +121,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
   @override
   Widget build(BuildContext context) {
     final envelopesAsync = ref.watch(envelopesStreamProvider);
+    final userAsync = ref.watch(userDataProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +152,22 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
               spacing: 8.h,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTotalBalanceCard(totalBalance),
+                // 2. Wrap the balance card in userAsync.when to calculate unallocated
+                userAsync.when(
+                  data: (user) {
+                    final income = user?.monthlyIncome ?? 0.0;
+                    final allocated = envelopes.fold(
+                      0.0,
+                      (sum, e) => sum + e.budgetAmount,
+                    );
+                    final unallocated = income - allocated;
+
+                    return _buildTotalBalanceCard(totalBalance, unallocated);
+                  },
+                  loading: () => _buildTotalBalanceCard(totalBalance, 0.0),
+                  error: (_, __) => _buildTotalBalanceCard(totalBalance, 0.0),
+                ),
+
                 SizedBox(height: 8.h),
                 WidgetText(
                   text: "Spending Envelopes",
@@ -169,7 +186,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
     );
   }
 
-  Widget _buildTotalBalanceCard(double balance) {
+  Widget _buildTotalBalanceCard(double totalAvailable, double unallocated) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -183,16 +200,17 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
           const WidgetText(text: "Total Available", textColor: Colors.white70),
           SizedBox(height: 8.h),
           WidgetText(
-            text: "₱ ${balance.toStringAsFixed(2)}",
+            text: "₱ ${totalAvailable.toStringAsFixed(2)}",
             textColor: Colors.white,
             fontSize: 26.sp,
             fontWeight: FontWeight.bold,
           ),
           SizedBox(height: 12.h),
           WidgetText(
-            text: "₱ 0.00 Unallocated",
+            text: "₱ ${unallocated.toStringAsFixed(2)} Unallocated",
             fontSize: 12.sp,
-            textColor: Colors.greenAccent,
+            // If unallocated is negative, show red to warn user they over-budgeted
+            textColor: unallocated < 0 ? Colors.redAccent : Colors.greenAccent,
           ),
         ],
       ),

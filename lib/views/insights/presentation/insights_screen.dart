@@ -24,8 +24,6 @@ class InsightsScreen extends ConsumerWidget {
           text: "AI Insights",
           fontWeight: FontWeight.bold,
         ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),

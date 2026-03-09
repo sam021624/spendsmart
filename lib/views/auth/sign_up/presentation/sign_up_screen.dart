@@ -9,7 +9,7 @@ import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
 import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/core/helper/validators.dart';
-import 'package:spendsmart/core/services/auth_service.dart';
+import 'package:spendsmart/services/auth_service.dart';
 import 'package:spendsmart/views/auth/sign_up/widgets/terms_and_agreements.dart';
 import 'package:spendsmart/views/home/navigation_screen.dart';
 
