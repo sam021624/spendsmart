@@ -77,7 +77,7 @@ class AIService {
                   "Envelopes: $envelopeStatus. Bills: $billStatus. Goals: $goalSummary. Days left in month: $daysLeft. Recent: $recentTx",
             },
           ],
-          "max_completion_tokens": 1000,
+          "max_completion_tokens": 1500,
         }),
       );
 
@@ -95,11 +95,10 @@ class AIService {
 final aiServiceProvider = Provider((ref) => AIService());
 
 final aiTipProvider = FutureProvider<String>((ref) async {
-  // Watch all four data streams
   final envelopes = ref.watch(envelopesStreamProvider).value ?? [];
   final bills = ref.watch(allBillsStreamProvider).value ?? [];
   final transactions = ref.watch(allTransactionsStreamProvider).value ?? [];
-  final goals = ref.watch(goalsStreamProvider).value ?? []; // Add this
+  final goals = ref.watch(goalsStreamProvider).value ?? [];
 
   return ref
       .read(aiServiceProvider)
@@ -107,6 +106,6 @@ final aiTipProvider = FutureProvider<String>((ref) async {
         envelopes: envelopes,
         bills: bills,
         transactions: transactions,
-        goals: goals, // Pass goals here
+        goals: goals,
       );
 });

@@ -222,6 +222,8 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         ? (envelope.remainingAmount / envelope.budgetAmount)
         : 0;
 
+    Color progressColor = progress < 0.3 ? Colors.red : Colors.blue;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -252,7 +254,8 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                   WidgetText(
                     text:
                         "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
-                    textColor: Colors.grey,
+                    // Also changing the text color to red if low for better visibility
+                    textColor: progress < 0.2 ? Colors.red : Colors.grey,
                     fontSize: 12.sp,
                   ),
                 ],
@@ -262,8 +265,10 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8.h,
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  backgroundColor: progressColor.withOpacity(0.1),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    progressColor,
+                  ), // Updated this
                 ),
               ),
             ],
