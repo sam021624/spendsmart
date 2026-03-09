@@ -6,8 +6,10 @@ import 'package:ionicons/ionicons.dart';
 import 'package:spendsmart/common/widgets/widget_button.dart';
 import 'package:spendsmart/common/widgets/widget_text.dart';
 import 'package:spendsmart/common/widgets/widget_text_field.dart';
+import 'package:spendsmart/core/helper/navigation_extension.dart';
 import 'package:spendsmart/models/envelope_model.dart';
 import 'package:spendsmart/services/ai_service.dart';
+import 'package:spendsmart/views/bills/presentation/bills_screen.dart';
 import 'package:spendsmart/views/envelope/presentation/envelope_detail_screen.dart';
 
 import '../../../providers/envelop_provider.dart';
@@ -31,59 +33,85 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
   }
 
   void _showCreateEnvelopeModal() {
+    bool isBill = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 20.w,
-          right: 20.w,
-          top: 20.h,
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8.h,
-          children: [
-            WidgetText(
-              text: "Create Envelope",
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            WidgetTextField(
-              controller: nameController,
-              iconData: Ionicons.pricetag_outline,
-              hintText: 'Envelope Name (e.g. Food)',
-            ),
-            WidgetTextField(
-              controller: amountController,
-              hintText: 'Monthly Budget Amount',
-              keyboardType: TextInputType.number,
-              iconData: Ionicons.cash_outline,
-            ),
-            WidgetButton(
-              text: 'Save Envelope',
-              onPressed: () async {
-                final name = nameController.text.trim();
-                final amount = double.tryParse(amountController.text) ?? 0.0;
+      builder: (context) => StatefulBuilder(
+        // Added this to make Checkbox work
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20.w,
+            right: 20.w,
+            top: 20.h,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WidgetText(
+                text: "Create Envelope",
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
+              SizedBox(height: 16.h),
+              WidgetTextField(
+                controller: nameController,
+                iconData: Ionicons.pricetag_outline,
+                hintText: 'Envelope Name (e.g. Food)',
+              ),
+              SizedBox(height: 8.h),
+              WidgetTextField(
+                controller: amountController,
+                hintText: 'Monthly Budget Amount',
+                keyboardType: TextInputType.number,
+                iconData: Ionicons.cash_outline,
+              ),
+              // The Checkbox Row
+              Row(
+                children: [
+                  Checkbox(
+                    value: isBill,
+                    onChanged: (val) {
+                      setModalState(
+                        () => isBill = val!,
+                      ); // Use setModalState here
+                    },
+                  ),
+                  const WidgetText(text: "Is this a Monthly Bill?"),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              WidgetButton(
+                text: 'Save Envelope',
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  final amount = double.tryParse(amountController.text) ?? 0.0;
 
-                if (name.isNotEmpty && amount > 0) {
-                  final service = ref.read(envelopeServiceProvider);
-                  if (service != null) {
-                    await service.addEnvelope(name, amount);
-                    nameController.clear();
-                    amountController.clear();
-                    if (mounted) Navigator.pop(context);
+                  if (name.isNotEmpty && amount > 0) {
+                    final service = ref.read(envelopeServiceProvider);
+                    if (service != null) {
+                      await service.addEnvelope(
+                        name: name,
+                        amount: amount,
+                        type: isBill ? 'bill' : 'spending',
+                        dueDate: isBill ? DateTime.now() : null,
+                      );
+                      nameController.clear();
+                      amountController.clear();
+                      if (context.mounted) Navigator.pop(context);
+                    }
                   }
-                }
-              },
-            ),
-            SizedBox(height: 24.h),
-          ],
+                },
+              ),
+              SizedBox(height: 24.h),
+            ],
+          ),
         ),
       ),
     );
@@ -180,12 +208,11 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EnvelopeDetailScreen(envelope: envelope),
-            ),
-          );
+          if (envelope.type == 'bill') {
+            context.navigateTo(BillsScreen(envelopeId: envelope.id));
+          } else {
+            context.navigateTo(EnvelopeDetailScreen(envelope: envelope));
+          }
         },
         borderRadius: BorderRadius.circular(16.r),
         child: Container(

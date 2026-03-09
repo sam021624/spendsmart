@@ -34,34 +34,41 @@ class EnvelopeService {
         });
   }
 
-  Future<void> addEnvelope(String name, double amount) async {
+  Future<void> addEnvelope({
+    required String name,
+    required double amount,
+    required String type,
+    DateTime? dueDate,
+  }) async {
     final docRef = _firestore
         .collection('users')
         .doc(uid)
         .collection('envelopes')
         .doc();
 
-    final newEnvelope = EnvelopeModel(
-      id: docRef.id,
-      name: name,
-      budgetAmount: amount,
-      remainingAmount: amount,
-    );
-
-    await docRef.set(newEnvelope.toMap());
+    await docRef.set({
+      'id': docRef.id,
+      'name': name,
+      'budgetAmount': amount,
+      'remainingAmount': amount,
+      'type': type,
+      'dueDate': dueDate?.toIso8601String(),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> addTransaction({
     required String envelopeId,
     required double amount,
     required String productName,
+    bool isBill = false,
+    String? billId,
   }) async {
     final envelopeDoc = _firestore
         .collection('users')
         .doc(uid)
         .collection('envelopes')
         .doc(envelopeId);
-
     final transactionDoc = _firestore
         .collection('users')
         .doc(uid)
@@ -69,22 +76,28 @@ class EnvelopeService {
         .doc();
 
     return _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(envelopeDoc);
+      final envSnapshot = await transaction.get(envelopeDoc);
+      if (!envSnapshot.exists) throw Exception("Envelope not found!");
 
-      if (!snapshot.exists) {
-        throw Exception("Envelope does not exist!");
-      }
-
-      double currentRemaining = (snapshot.data()?['remainingAmount'] ?? 0.0)
+      double currentRemaining = (envSnapshot.data()?['remainingAmount'] ?? 0.0)
           .toDouble();
-      double newRemaining = currentRemaining - amount;
 
-      transaction.update(envelopeDoc, {'remainingAmount': newRemaining});
+      transaction.update(envelopeDoc, {
+        'remainingAmount': currentRemaining - amount,
+      });
+
+      if (isBill && billId != null) {
+        final billDoc = _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('bills')
+            .doc(billId);
+        transaction.update(billDoc, {'isPaid': true, 'paidAmount': amount});
+      }
 
       transaction.set(transactionDoc, {
         'id': transactionDoc.id,
         'envelopeId': envelopeId,
-        'envelopeName': snapshot.data()?['name'],
         'amount': amount,
         'productName': productName,
         'timestamp': FieldValue.serverTimestamp(),
@@ -92,15 +105,39 @@ class EnvelopeService {
     });
   }
 
-  // Stream of Transactions for the current user
   Stream<List<Map<String, dynamic>>> getTransactions() {
     return _firestore
         .collection('users')
         .doc(uid)
         .collection('transactions')
-        .orderBy('timestamp', descending: true) // Newest first
+        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<void> markBillAsPaid(EnvelopeModel envelope) async {
+    final docRef = _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('envelopes')
+        .doc(envelope.id);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.update(docRef, {'remainingAmount': 0.0, 'isPaid': true});
+
+      final txDoc = _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('transactions')
+          .doc();
+      transaction.set(txDoc, {
+        'id': txDoc.id,
+        'envelopeId': envelope.id,
+        'productName': "Paid: ${envelope.name}",
+        'amount': envelope.budgetAmount,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    });
   }
 }
 
