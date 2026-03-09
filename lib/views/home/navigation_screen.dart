@@ -146,6 +146,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   fontWeight: FontWeight.bold,
                 ),
                 WidgetTextField(
+                  controller: productNameController,
+                  hintText: "What did you buy? (e.g. Starbucks)",
+                  iconData: Ionicons.create_outline,
+                ),
+                WidgetTextField(
                   controller: amountController,
                   hintText: "0.00",
                   keyboardType: TextInputType.number,
@@ -153,31 +158,44 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 ),
 
                 envelopesAsync.when(
-                  data: (envelopes) => DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Ionicons.wallet_outline),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  data: (envelopes) {
+                    // FILTER: Only include envelopes where the type is 'spending'
+                    final spendingEnvelopes = envelopes
+                        .where((env) => env.type == 'spending')
+                        .toList();
+
+                    return DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(
+                          Ionicons.wallet_outline,
+                          color: AppColors.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15.r),
+                        ),
+                        hintText: "Select Spending Category",
                       ),
-                      hintText: "Select Envelope",
-                    ),
-                    items: envelopes
-                        .map(
-                          (env) => DropdownMenuItem(
-                            value: env.id,
-                            child: Text(env.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) => selectedEnvelopeId = val,
+                      // Use the filtered list here
+                      items: spendingEnvelopes
+                          .map(
+                            (env) => DropdownMenuItem(
+                              value: env.id,
+                              child: WidgetText(
+                                text: env.name,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) => selectedEnvelopeId = val,
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => const WidgetText(
+                    text: "Error loading categories",
+                    textColor: Colors.red,
                   ),
-                  loading: () => const CircularProgressIndicator(),
-                  error: (e, _) => const Text("Error loading envelopes"),
-                ),
-                WidgetTextField(
-                  controller: productNameController,
-                  hintText: "What did you buy? (e.g. Starbucks)",
-                  iconData: Ionicons.create_outline,
                 ),
                 WidgetButton(
                   text: "Deduct from Envelope",
