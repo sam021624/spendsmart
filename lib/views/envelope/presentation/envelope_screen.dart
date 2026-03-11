@@ -36,12 +36,13 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
   Color _getProgressColor(double progress) {
     if (progress >= 1.0) return Colors.red;
     if (progress >= 0.9) return Colors.orange;
-    if (progress >= 0.7) return Colors.yellow;
+    if (progress >= 0.7) return Colors.yellow.shade700;
     return Colors.blue;
   }
 
-  void _showCreateEnvelopeModal() {
+  void _showCreateEnvelopeModal(double unallocatedBalance) {
     bool isBill = false;
+    String? amountError;
 
     showModalBottomSheet(
       context: context,
@@ -55,65 +56,89 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
             left: 20.w,
             right: 20.w,
             top: 20.h,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12.h,
             children: [
               WidgetText(
                 text: "Create Envelope",
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),
-              SizedBox(height: 16.h),
+              WidgetText(
+                text: "Available: ₱${unallocatedBalance.toStringAsFixed(2)}",
+                fontSize: 12.sp,
+                textColor: Colors.grey,
+              ),
               WidgetTextField(
                 controller: nameController,
                 iconData: Ionicons.pricetag_outline,
                 hintText: 'Envelope Name (e.g. Food)',
               ),
-              SizedBox(height: 8.h),
               WidgetTextField(
                 controller: amountController,
                 hintText: 'Monthly Budget Amount',
                 keyboardType: TextInputType.number,
                 iconData: Ionicons.cash_outline,
+                onChanged: (val) {
+                  final enteredAmount = double.tryParse(val) ?? 0.0;
+                  setModalState(() {
+                    if (enteredAmount > unallocatedBalance) {
+                      amountError =
+                          "Exceeds available ₱${unallocatedBalance.toStringAsFixed(2)}";
+                    } else {
+                      amountError = null;
+                    }
+                  });
+                },
               ),
+              if (amountError != null)
+                Padding(
+                  padding: EdgeInsets.only(left: 8.w),
+                  child: WidgetText(
+                    text: amountError!,
+                    textColor: Colors.red,
+                    fontSize: 10.sp,
+                  ),
+                ),
+
               Row(
                 children: [
                   Checkbox(
                     value: isBill,
-                    onChanged: (val) {
-                      setModalState(() => isBill = val!);
-                    },
+                    onChanged: (val) => setModalState(() => isBill = val!),
                   ),
                   const WidgetText(text: "Is this a Monthly Bill?"),
                 ],
               ),
-              SizedBox(height: 16.h),
               WidgetButton(
                 text: 'Save Envelope',
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  final amount = double.tryParse(amountController.text) ?? 0.0;
+                onPressed: amountError != null
+                    ? null
+                    : () async {
+                        final name = nameController.text.trim();
+                        final amount =
+                            double.tryParse(amountController.text) ?? 0.0;
 
-                  if (name.isNotEmpty && amount > 0) {
-                    final service = ref.read(envelopeServiceProvider);
-                    if (service != null) {
-                      await service.addEnvelope(
-                        name: name,
-                        amount: amount,
-                        type: isBill ? 'bill' : 'spending',
-                        dueDate: isBill ? DateTime.now() : null,
-                      );
-                      nameController.clear();
-                      amountController.clear();
-                      if (context.mounted) Navigator.pop(context);
-                    }
-                  }
-                },
+                        if (name.isNotEmpty && amount > 0) {
+                          final service = ref.read(envelopeServiceProvider);
+                          if (service != null) {
+                            await service.addEnvelope(
+                              name: name,
+                              amount: amount,
+                              type: isBill ? 'bill' : 'spending',
+                              dueDate: isBill ? DateTime.now() : null,
+                            );
+                            nameController.clear();
+                            amountController.clear();
+                            if (context.mounted) Navigator.pop(context);
+                          }
+                        }
+                      },
               ),
-              SizedBox(height: 24.h),
             ],
           ),
         ),
@@ -128,6 +153,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: const WidgetText(
           text: "My Envelopes",
           fontWeight: FontWeight.bold,
@@ -257,7 +283,7 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                   WidgetText(
                     text:
                         "₱${spentAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
-                    textColor: progress > 0.8 ? Colors.red : Colors.grey,
+                    textColor: _getProgressColor(progress),
                     fontSize: 10.sp,
                   ),
                 ],
@@ -294,7 +320,18 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
       ),
 
       child: InkWell(
-        onTap: _showCreateEnvelopeModal,
+        onTap: () {
+          final envelopes = ref.read(envelopesStreamProvider).value ?? [];
+          final user = ref.read(userDataProvider).value;
+          final income = user?.monthlyIncome ?? 0.0;
+          final allocated = envelopes.fold(
+            0.0,
+            (sum, e) => sum + e.budgetAmount,
+          );
+          final currentUnallocated = income - allocated;
+
+          _showCreateEnvelopeModal(currentUnallocated);
+        },
         borderRadius: BorderRadius.circular(16.r),
         child: Container(
           width: double.infinity,

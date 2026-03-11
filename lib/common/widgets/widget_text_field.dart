@@ -15,6 +15,7 @@ class WidgetTextField extends StatefulWidget {
     this.keyboardType,
     this.maxLength,
     this.textAlign,
+    this.onChanged, // 1. Add it here
   });
 
   final TextEditingController controller;
@@ -26,6 +27,7 @@ class WidgetTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final int? maxLength;
   final TextAlign? textAlign;
+  final Function(String)? onChanged; // 2. Define the type
 
   @override
   State<WidgetTextField> createState() => _WidgetTextFieldState();
@@ -55,6 +57,7 @@ class _WidgetTextFieldState extends State<WidgetTextField> {
       keyboardType: widget.keyboardType,
       obscureText: _isObscure,
       maxLength: widget.maxLength,
+      onChanged: widget.onChanged, // 3. Pass it to the TextFormField
       autovalidateMode: AutovalidateMode.onUserInteraction,
       textAlign: widget.textAlign ?? TextAlign.start,
       decoration: InputDecoration(
@@ -74,6 +77,19 @@ class _WidgetTextFieldState extends State<WidgetTextField> {
             : null,
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: AppColors.grey),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        // Adding focused and error borders makes the UI feel more polished
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.red),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
           borderRadius: BorderRadius.circular(12.r),
         ),
       ),

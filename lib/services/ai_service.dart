@@ -75,7 +75,7 @@ class AIService {
                   "Envelopes: $envelopeStatus. Bills: $billStatus. Goals: $goalSummary. Days left in month: $daysLeft. Recent: $recentTx",
             },
           ],
-          "max_completion_tokens": 2500,
+          "max_completion_tokens": 500,
         }),
       );
 

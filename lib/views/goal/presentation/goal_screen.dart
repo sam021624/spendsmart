@@ -16,6 +16,7 @@ class GoalsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: const WidgetText(
           text: "Savings Goals",
           fontWeight: FontWeight.bold,

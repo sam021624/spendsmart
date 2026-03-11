@@ -20,6 +20,7 @@ class InsightsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: const WidgetText(
           text: "AI Insights",
           fontWeight: FontWeight.bold,
