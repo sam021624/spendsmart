@@ -33,6 +33,13 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
     super.dispose();
   }
 
+  Color _getProgressColor(double progress) {
+    if (progress >= 1.0) return Colors.red;
+    if (progress >= 0.9) return Colors.orange;
+    if (progress >= 0.7) return Colors.yellow;
+    return Colors.blue;
+  }
+
   void _showCreateEnvelopeModal() {
     bool isBill = false;
 
@@ -43,7 +50,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) => StatefulBuilder(
-        // Added this to make Checkbox work
         builder: (context, setModalState) => Padding(
           padding: EdgeInsets.only(
             left: 20.w,
@@ -73,15 +79,12 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                 keyboardType: TextInputType.number,
                 iconData: Ionicons.cash_outline,
               ),
-              // The Checkbox Row
               Row(
                 children: [
                   Checkbox(
                     value: isBill,
                     onChanged: (val) {
-                      setModalState(
-                        () => isBill = val!,
-                      ); // Use setModalState here
+                      setModalState(() => isBill = val!);
                     },
                   ),
                   const WidgetText(text: "Is this a Monthly Bill?"),
@@ -152,7 +155,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
               spacing: 8.h,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 2. Wrap the balance card in userAsync.when to calculate unallocated
                 userAsync.when(
                   data: (user) {
                     final income = user?.monthlyIncome ?? 0.0;
@@ -209,7 +211,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
           WidgetText(
             text: "₱ ${unallocated.toStringAsFixed(2)} Unallocated",
             fontSize: 12.sp,
-            // If unallocated is negative, show red to warn user they over-budgeted
             textColor: unallocated < 0 ? Colors.redAccent : Colors.greenAccent,
           ),
         ],
@@ -218,11 +219,13 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
   }
 
   Widget _buildEnvelopeItem(EnvelopeModel envelope) {
+    double spentAmount = envelope.budgetAmount - envelope.remainingAmount;
+
     double progress = envelope.budgetAmount > 0
-        ? (envelope.remainingAmount / envelope.budgetAmount)
+        ? (spentAmount / envelope.budgetAmount)
         : 0;
 
-    Color progressColor = progress < 0.3 ? Colors.red : Colors.blue;
+    Color progressColor = _getProgressColor(progress);
 
     return Material(
       color: Colors.transparent,
@@ -253,10 +256,9 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                   WidgetText(text: envelope.name, fontWeight: FontWeight.bold),
                   WidgetText(
                     text:
-                        "₱${envelope.remainingAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
-                    // Also changing the text color to red if low for better visibility
-                    textColor: progress < 0.2 ? Colors.red : Colors.grey,
-                    fontSize: 12.sp,
+                        "₱${spentAmount.toInt()} / ₱${envelope.budgetAmount.toInt()}",
+                    textColor: progress > 0.8 ? Colors.red : Colors.grey,
+                    fontSize: 10.sp,
                   ),
                 ],
               ),
@@ -266,9 +268,15 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
                   value: progress,
                   minHeight: 8.h,
                   backgroundColor: progressColor.withOpacity(0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progressColor,
-                  ), // Updated this
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: WidgetText(
+                  text: "₱${envelope.remainingAmount.toInt()} left",
+                  fontSize: 10.sp,
+                  textColor: Colors.grey,
                 ),
               ),
             ],
@@ -332,11 +340,6 @@ class _EnvelopeScreenState extends ConsumerState<EnvelopeScreen> {
               ),
             ),
           ),
-          // // Optional: Add a refresh button
-          // IconButton(
-          //   icon: Icon(Icons.refresh, size: 16.sp, color: Colors.blue),
-          //   onPressed: () => ref.refresh(aiTipProvider),
-          // ),
         ],
       ),
     );

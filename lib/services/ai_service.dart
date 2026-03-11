@@ -23,12 +23,10 @@ class AIService {
     if (envelopes.isEmpty && bills.isEmpty)
       return "Set up a budget to get started!";
 
-    // Summarize Spending Envelopes
     final envelopeStatus = envelopes
         .map((e) => "${e.name}: ₱${e.remainingAmount}/${e.budgetAmount}")
         .join(", ");
 
-    // Summarize Bill Status (New Logic)
     final unpaidBills = bills.where((b) => !b.isPaid).toList();
     final billStatus = unpaidBills.isEmpty
         ? "All bills paid!"
@@ -60,8 +58,8 @@ class AIService {
           "Content-Type": "application/json",
         },
         body: jsonEncode({
-          // "model": "openai/gpt-4o-mini"
-          "model": "openai/gpt-5-mini",
+          "model": "openai/gpt-4o-mini",
+          // "model": "openai/gpt-5-mini",
           "messages": [
             {
               "role": "system",
@@ -77,7 +75,7 @@ class AIService {
                   "Envelopes: $envelopeStatus. Bills: $billStatus. Goals: $goalSummary. Days left in month: $daysLeft. Recent: $recentTx",
             },
           ],
-          "max_completion_tokens": 1500,
+          "max_completion_tokens": 2500,
         }),
       );
 

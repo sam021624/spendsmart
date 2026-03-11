@@ -131,6 +131,11 @@ class ProfileScreen extends ConsumerWidget {
         ),
         _buildSettingsTile(
           icon: Ionicons.color_palette_outline,
+          title: "Logs",
+          subtitle: "Transaction Logs",
+        ),
+        _buildSettingsTile(
+          icon: Ionicons.color_palette_outline,
           title: "Appearance",
           subtitle: "Dark Mode & Themes",
         ),
